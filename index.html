@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PILE — BPO Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD5;
+  --text: #1A1916;
+  --text2: #6B6860;
+  --text3: #A8A49E;
+  --accent: #1A3C2E;
+  --accent-mid: #4A7C61;
+  --accent-light: #E8F0EC;
+  --danger: #C13D2E;
+  --danger-light: #FAEDEB;
+  --warn: #A0621A;
+  --warn-light: #FDF3E7;
+  --success: #1A6B3A;
+  --success-light: #E8F5EE;
+  --info: #185FA5;
+  --info-light: #E6F1FB;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+.app { display: flex; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { width: 220px; background: var(--accent); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo .company { font-size: 20px; font-weight: 600; color: #fff; letter-spacing: 0.06em; }
+.sidebar-logo .sub { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 3px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav { padding: 12px 0; flex: 1; }
+.nav-section { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 20px 5px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 20px; color: rgba(255,255,255,0.6); font-size: 13px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.nav-item.active { color: #fff; background: rgba(255,255,255,0.11); border-left-color: #7DB89A; }
+.nav-badge { margin-left: auto; background: #C13D2E; color: #fff; font-size: 10px; font-family: var(--mono); padding: 1px 7px; border-radius: 20px; min-width: 18px; text-align: center; }
+.nav-badge.zero { background: rgba(255,255,255,0.15); }
+.sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.sidebar-date { font-size: 11px; color: rgba(255,255,255,0.35); font-family: var(--mono); }
+.drive-info { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 6px; display: flex; align-items: center; gap: 6px; }
+.drive-info span { width: 6px; height: 6px; border-radius: 50%; background: #7DB89A; display: inline-block; }
+
+.main { margin-left: 220px; flex: 1; padding: 28px 32px; }
+
+/* BUTTONS */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-family: 'DM Sans',sans-serif; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #254D3B; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* TOPBAR */
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; }
+.page-title { font-size: 21px; font-weight: 600; }
+.page-subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* STATS */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 22px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.stat-value { font-size: 22px; font-weight: 600; font-family: var(--mono); }
+.stat-value.warn { color: var(--warn); }
+.stat-value.danger { color: var(--danger); }
+.stat-value.success { color: var(--success); }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* TOOLBAR */
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-group { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.filter-btn { padding: 6px 13px; font-size: 12px; cursor: pointer; border: none; background: transparent; color: var(--text2); font-family: 'DM Sans',sans-serif; transition: all 0.15s; }
+.filter-btn.active { background: var(--accent); color: #fff; }
+.search-box { flex: 1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 11px; gap: 7px; min-width: 180px; }
+.search-box input { border: none; outline: none; font-size: 13px; background: transparent; color: var(--text); width: 100%; padding: 7px 0; font-family: 'DM Sans',sans-serif; }
+.search-box input::placeholder { color: var(--text3); }
+
+/* TABLE */
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--surface2); }
+th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #FAFAF8; }
+.empty-state { text-align: center; padding: 48px; color: var(--text3); font-size: 13px; }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge-pago { background: var(--success-light); color: var(--success); }
+.badge-pendente { background: var(--warn-light); color: var(--warn); }
+.badge-vencido { background: var(--danger-light); color: var(--danger); }
+.badge-programado { background: var(--info-light); color: var(--info); }
+.badge-neutral { background: var(--surface2); color: var(--text2); }
+
+/* FILE CHIPS */
+.file-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; border: 0.5px solid; }
+.chip-doc { background: #E8F0FE; color: #1A56DB; border-color: #C5D8FA; }
+.chip-doc:hover { background: #C5D8FA; }
+.chip-comp { background: var(--success-light); color: var(--success); border-color: #b8ddc6; }
+.chip-comp:hover { background: #d4edde; }
+.chip-missing { background: var(--surface2); color: var(--text3); border-color: var(--border); font-style: italic; cursor: pointer; }
+.chip-missing:hover { border-color: var(--accent-mid); color: var(--accent-mid); }
+
+/* ACTIONS */
+.actions-col { display: flex; gap: 5px; }
+.icon-btn { background: none; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; padding: 4px 7px; font-size: 12px; color: var(--text2); transition: all 0.15s; }
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn.red:hover { background: var(--danger-light); color: var(--danger); border-color: #EBC4BF; }
+
+/* VIEWS */
+.view { display: none; }
+.view.active { display: block; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 14px; width: 580px; max-width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.2); }
+.modal-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; padding: 2px 7px; border-radius: 4px; }
+.modal-close:hover { background: var(--surface2); }
+.modal-body { padding: 20px 22px; }
+.modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1/-1; }
+label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+input, select, textarea { padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Sans',sans-serif; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent-mid); background: var(--surface); }
+textarea { resize: vertical; min-height: 60px; }
+.form-sep { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; padding-bottom: 8px; border-bottom: 1px solid var(--border); grid-column: 1/-1; margin-top: 6px; }
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* DRIVE LINK INPUT */
+.drive-input-wrap { position: relative; }
+.drive-input-wrap input { padding-right: 70px; }
+.drive-preview { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--info); font-weight: 500; cursor: pointer; }
+.drive-preview:hover { text-decoration: underline; }
+
+/* UPLOAD ZONE */
+.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; margin-bottom: 4px; }
+.upload-zone:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.upload-zone-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.upload-zone-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* AI BOX */
+.ai-box { background: #F7F3FF; border: 1px solid #D8C8F5; border-radius: var(--radius-sm); padding: 12px 14px; display: none; margin-top: 10px; }
+.ai-box-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6B3DA8; margin-bottom: 8px; }
+.ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ai-field { font-size: 12px; color: var(--text); }
+.ai-field span { display: block; font-size: 10px; color: var(--text3); margin-bottom: 1px; }
+
+/* FECHAMENTO */
+.closing-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.closing-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.report-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.report-header { padding: 13px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.report-header h3 { font-size: 13px; font-weight: 600; }
+.check-item { display: flex; align-items: center; gap: 9px; padding: 10px 18px; border-bottom: 1px solid var(--border); }
+.check-item:last-child { border-bottom: none; }
+.check-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.dot-ok { background: var(--success-light); color: var(--success); }
+.dot-fail { background: var(--danger-light); color: var(--danger); }
+.dot-warn { background: var(--warn-light); color: var(--warn); }
+
+/* DRIVE GUIDE */
+.drive-guide { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.guide-step { display: flex; gap: 14px; margin-bottom: 18px; }
+.guide-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.guide-body h4 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.guide-body p { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.guide-body code { background: var(--surface2); padding: 1px 6px; border-radius: 4px; font-family: var(--mono); font-size: 11px; color: var(--text); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; right: 22px; background: var(--accent); color: #fff; padding: 11px 16px; border-radius: var(--radius-sm); font-size: 13px; z-index: 300; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.toast.show { display: block; animation: sup 0.2s ease; }
+@keyframes sup { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.mono { font-family: var(--mono); }
+.text-right { text-align: right; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">PILE</div>
+    <div class="sub">BPO — Financeiro</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Operação</div>
+    <div class="nav-item active" onclick="showView('boletos',this)">
+      <span>📋</span> Boletos
+      <span class="nav-badge zero" id="badge-urgente">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('drive',this)">
+      <span>📂</span> Como usar o Drive
+    </div>
+    <div class="nav-section">Relatórios</div>
+    <div class="nav-item" onclick="showView('fechamento',this)">
+      <span>📅</span> Fechamento Mensal
+    </div>
+    <div class="nav-item" onclick="showView('relatorio',this)">
+      <span>📊</span> Relatório Geral
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-date" id="sidebar-date"></div>
+    <div class="drive-info"><span></span> Drive via links diretos</div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- BOLETOS -->
+  <div class="view active" id="view-boletos">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Boletos & Pagamentos</div>
+        <div class="page-subtitle">Gerencie despesas e vincule documentos do Google Drive</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+        <button class="btn btn-primary" onclick="openModal()">+ Novo Lançamento</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total do Mês</div>
+        <div class="stat-value mono" id="stat-total">R$ 0,00</div>
+        <div class="stat-sub" id="stat-mes-label">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pendentes</div>
+        <div class="stat-value warn" id="stat-pendentes">0</div>
+        <div class="stat-sub">Aguardando pagamento</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Vencidos</div>
+        <div class="stat-value danger" id="stat-vencidos">0</div>
+        <div class="stat-sub">Ação imediata</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pagos no Mês</div>
+        <div class="stat-value success" id="stat-pagos">0</div>
+        <div class="stat-sub">Com comprovante</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+        <button class="filter-btn" onclick="setFilter('pendente',this)">Pendentes</button>
+        <button class="filter-btn" onclick="setFilter('vencido',this)">Vencidos</button>
+        <button class="filter-btn" onclick="setFilter('programado',this)">Programados</button>
+        <button class="filter-btn" onclick="setFilter('pago',this)">Pagos</button>
+      </div>
+      <div class="search-box">
+        <span style="color:var(--text3);font-size:13px">🔍</span>
+        <input type="text" placeholder="Buscar fornecedor, descrição..." id="search-input" oninput="renderTable()">
+      </div>
+      <select id="mes-select" onchange="renderTable()" style="font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);">
+        <option value="">Todos os meses</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vencimento</th>
+            <th>Fornecedor</th>
+            <th>Descrição (EN)</th>
+            <th>Tipo</th>
+            <th class="text-right">Valor</th>
+            <th>Status</th>
+            <th>Documentos Drive</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="boletos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DRIVE GUIDE -->
+  <div class="view" id="view-drive">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Como usar o Google Drive</div>
+        <div class="page-subtitle">Organize seus arquivos e vincule ao sistema sem configuração</div>
+      </div>
+    </div>
+    <div class="drive-guide">
+      <div style="background:var(--accent-light);border-radius:var(--radius);padding:14px 16px;margin-bottom:22px;font-size:13px;color:var(--accent);font-weight:500;">
+        ✅ Sem configuração de API — funciona com qualquer conta Google. Basta copiar e colar o link do arquivo.
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">1</div>
+        <div class="guide-body">
+          <h4>Crie a estrutura de pastas no seu Drive</h4>
+          <p>Acesse <a href="https://drive.google.com" target="_blank" style="color:var(--info)">drive.google.com</a> e crie as pastas manualmente:<br>
+          <code>PILE / A Pagar</code> — boletos aguardando pagamento<br>
+          <code>PILE / Pagos / 2025-05</code> — documentos pagos por mês<br>
+          <code>PILE / Comprovantes / 2025-05</code> — comprovantes por mês</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">2</div>
+        <div class="guide-body">
+          <h4>Faça upload do boleto ou documento</h4>
+          <p>Arraste o PDF para a pasta <code>A Pagar</code> no Drive.</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">3</div>
+        <div class="guide-body">
+          <h4>Copie o link de compartilhamento</h4>
+          <p>Clique com botão direito no arquivo → <strong>Compartilhar</strong> → <strong>Copiar link</strong>. Certifique-se que o acesso está como <em>"Qualquer pessoa com o link"</em> ou <em>"restrito"</em> conforme sua preferência.</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">4</div>
+        <div class="guide-body">
+          <h4>Cole o link no lançamento</h4>
+          <p>Ao criar ou editar um lançamento, cole o link nos campos <strong>"Link do documento"</strong> ou <strong>"Link do comprovante"</strong>. O sistema vai exibir o chip clicável direto na tabela.</p>
+        </div>
+      </div>
+      <div class="guide-step">
+        <div class="guide-num">5</div>
+        <div class="guide-body">
+          <h4>Quando pagar, mova o arquivo no Drive</h4>
+          <p>Arraste o boleto de <code>A Pagar</code> para <code>Pagos/2025-05</code> e faça upload do comprovante em <code>Comprovantes/2025-05</code>. Depois atualize o lançamento com o link do comprovante.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FECHAMENTO -->
+  <div class="view" id="view-fechamento">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Fechamento Mensal</div>
+        <div class="page-subtitle">Consolidação para envio ao dono até dia 02 ou 03</div>
+      </div>
+      <div class="topbar-actions">
+        <select id="select-mes-fech" onchange="renderFechamento()" style="font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);"></select>
+        <button class="btn btn-primary btn-sm" onclick="exportCSV()">Gerar CSV</button>
+      </div>
+    </div>
+
+    <div class="closing-card">
+      <div style="display:flex;align-items:center;gap:13px">
+        <div class="closing-icon" id="closing-icon" style="background:var(--warn-light)">⏰</div>
+        <div>
+          <div style="font-size:14px;font-weight:600" id="closing-title">Verificando...</div>
+          <div style="font-size:12px;color:var(--text2)" id="closing-sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-header"><h3 id="fech-title">Lançamentos do Mês</h3></div>
+      <table style="width:100%">
+        <thead><tr>
+          <th>Data Pgto</th><th>Fornecedor</th><th>Descrição (EN)</th>
+          <th>Tipo</th><th class="text-right">Valor</th><th>Docs</th><th>Status</th>
+        </tr></thead>
+        <tbody id="fech-tbody"></tbody>
+        <tfoot>
+          <tr style="background:var(--surface2)">
+            <td colspan="4" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--text2)">TOTAL</td>
+            <td style="padding:11px 14px;font-size:14px;font-weight:600;font-family:var(--mono);text-align:right" id="fech-total"></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-header"><h3>Checklist de Envio</h3></div>
+      <div id="checklist-wrap"></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div class="view" id="view-relatorio">
+    <div class="topbar">
+      <div><div class="page-title">Relatório Geral</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Exportar CSV</button>
+    </div>
+    <div id="relatorio-content"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Novo Lançamento</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="file-input" onchange="handleFile(this.files[0])">
+        <div class="upload-zone-title" id="upload-title">📄 Arraste o boleto para leitura automática com IA</div>
+        <div class="upload-zone-sub">PDF, JPG ou PNG — extrai fornecedor, valor e vencimento</div>
+      </div>
+      <div class="ai-box" id="ai-box">
+        <div class="ai-box-title">✨ Dados extraídos pela IA</div>
+        <div class="ai-grid" id="ai-grid"></div>
+      </div>
+
+      <div class="form-grid" style="margin-top:16px">
+        <div class="form-sep">Dados do Documento</div>
+        <div class="form-group">
+          <label>Fornecedor</label>
+          <input type="text" id="f-fornecedor" placeholder="Ex: CEMIG, Aluguel...">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Documento</label>
+          <select id="f-tipo">
+            <option value="boleto">Boleto</option>
+            <option value="nota">Nota Fiscal</option>
+            <option value="recibo">Recibo</option>
+            <option value="fatura">Fatura</option>
+            <option value="contrato">Contrato</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" id="f-valor" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label>Vencimento</label>
+          <input type="date" id="f-vencimento">
+        </div>
+        <div class="form-group full">
+          <label>Descrição em português</label>
+          <input type="text" id="f-desc-pt" placeholder="Ex: Aluguel do galpão — maio/2025">
+        </div>
+        <div class="form-group full">
+          <label>Descrição em inglês <span style="font-weight:400;text-transform:none;letter-spacing:0">(para planilha)</span></label>
+          <input type="text" id="f-desc-en" placeholder="Ex: Warehouse rent — May/2025">
+        </div>
+
+        <div class="form-sep">Pagamento</div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option value="pendente">Pendente</option>
+            <option value="programado">Programado</option>
+            <option value="pago">Pago</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Data de Pagamento</label>
+          <input type="date" id="f-data-pag">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="f-obs" placeholder="Número do boleto, anotações..."></textarea>
+        </div>
+
+        <div class="form-sep">📂 Documentos no Google Drive</div>
+        <div class="form-group full">
+          <label>Link do documento (boleto / nota / recibo)</label>
+          <div class="drive-input-wrap">
+            <input type="url" id="f-drive-doc" placeholder="Cole o link de compartilhamento do Drive aqui" oninput="previewLink('f-drive-doc','prev-doc')">
+            <span class="drive-preview" id="prev-doc" onclick="openLink('f-drive-doc')" style="display:none">Abrir ↗</span>
+          </div>
+          <div class="field-hint">Drive → botão direito no arquivo → Compartilhar → Copiar link</div>
+        </div>
+        <div class="form-group full">
+          <label>Link do comprovante de pagamento</label>
+          <div class="drive-input-wrap">
+            <input type="url" id="f-drive-comp" placeholder="Cole o link do comprovante aqui" oninput="previewLink('f-drive-comp','prev-comp')">
+            <span class="drive-preview" id="prev-comp" onclick="openLink('f-drive-comp')" style="display:none">Abrir ↗</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvar()">Salvar Lançamento</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'pile_bpo_v3';
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let editId = null;
+let filterStatus = 'todos';
+const hoje = new Date();
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmtDate(s) { if(!s) return '—'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
+function fmtMoney(v) { return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function monthKey(s) { if(!s) return ''; return s.slice(0,7); }
+function monthLabel(k) { if(!k) return ''; const [y,m]=k.split('-'); return meses[parseInt(m)-1]+' '+y; }
+
+function calcStatus(item) {
+  if (item.status==='pago') return 'pago';
+  if (item.status==='programado') return 'programado';
+  if (item.vencimento && new Date(item.vencimento+'T12:00:00') < hoje) return 'vencido';
+  return 'pendente';
+}
+
+document.getElementById('sidebar-date').textContent = hoje.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+// ── VIEWS ──────────────────────────────────────────
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='fechamento') renderFechamento();
+  if(name==='relatorio') renderRelatorio();
+}
+
+// ── TABLE ──────────────────────────────────────────
+function renderTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const mk = document.getElementById('mes-select').value;
+
+  const keys = [...new Set(data.map(d=>monthKey(d.vencimento)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('mes-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todos os meses</option>' + keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${monthLabel(k)}</option>`).join('');
+
+  let rows = data.filter(item => {
+    const s = calcStatus(item);
+    if (filterStatus!=='todos' && s!==filterStatus) return false;
+    if (mk && monthKey(item.vencimento)!==mk) return false;
+    if (q) {
+      const hay = [item.fornecedor,item.desc_en,item.desc_pt,item.obs].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  rows.sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+
+  const bm={pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm={pago:'✓ Pago',pendente:'Pendente',vencido:'⚠ Vencido',programado:'Programado'};
+  const dm={boleto:'📋',nota:'🧾',recibo:'📄',fatura:'📑',contrato:'📝',outro:'📌'};
+
+  const tbody = document.getElementById('boletos-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhum lançamento encontrado.</td></tr>';
+    updateStats(); return;
+  }
+
+  tbody.innerHTML = rows.map(item => {
+    const s = calcStatus(item);
+    const docChip = item.drive_doc
+      ? `<a class="file-chip chip-doc" href="${item.drive_doc}" target="_blank">📄 Doc</a>`
+      : `<span class="file-chip chip-missing" onclick="editItem('${item.id}')">+ doc</span>`;
+    const compChip = item.drive_comp
+      ? `<a class="file-chip chip-comp" href="${item.drive_comp}" target="_blank">🧾 Comp</a>`
+      : `<span class="file-chip chip-missing" onclick="editItem('${item.id}')">+ comp</span>`;
+    return `<tr>
+      <td class="mono" style="font-size:12px">${fmtDate(item.vencimento)}</td>
+      <td style="font-weight:500">${item.fornecedor||'—'}</td>
+      <td style="color:var(--text2);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${item.desc_en||''}">${item.desc_en||item.desc_pt||'—'}</td>
+      <td><span class="badge badge-neutral">${dm[item.tipo]||'📌'} ${item.tipo||'—'}</span></td>
+      <td class="mono text-right">${fmtMoney(item.valor)}</td>
+      <td><span class="badge ${bm[s]}">${lm[s]}</span></td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">${docChip} ${compChip}</div></td>
+      <td><div class="actions-col">
+        <button class="icon-btn" onclick="editItem('${item.id}')" title="Editar">✏️</button>
+        <button class="icon-btn" onclick="markPago('${item.id}')" title="Marcar como pago">✓</button>
+        <button class="icon-btn red" onclick="deleteItem('${item.id}')" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  updateStats();
+}
+
+function updateStats() {
+  const now = monthKey(hoje.toISOString());
+  const mes = data.filter(d=>monthKey(d.vencimento)===now||monthKey(d.data_pag)===now);
+  document.getElementById('stat-total').textContent = fmtMoney(mes.reduce((s,d)=>s+Number(d.valor||0),0));
+  document.getElementById('stat-mes-label').textContent = meses[hoje.getMonth()]+' '+hoje.getFullYear();
+  const p=data.filter(d=>calcStatus(d)==='pendente').length;
+  const v=data.filter(d=>calcStatus(d)==='vencido').length;
+  document.getElementById('stat-pendentes').textContent = p;
+  document.getElementById('stat-vencidos').textContent = v;
+  document.getElementById('stat-pagos').textContent = data.filter(d=>calcStatus(d)==='pago'&&(monthKey(d.data_pag)===now||monthKey(d.vencimento)===now)).length;
+  const urg = p+v;
+  const badge = document.getElementById('badge-urgente');
+  badge.textContent = urg;
+  badge.className = 'nav-badge'+(urg===0?' zero':'');
+}
+
+function setFilter(s,btn) {
+  filterStatus=s;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ── MODAL ──────────────────────────────────────────
+function openModal() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Novo Lançamento';
+  ['f-fornecedor','f-valor','f-vencimento','f-desc-pt','f-desc-en','f-data-pag','f-obs','f-drive-doc','f-drive-comp'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-tipo').value='boleto';
+  document.getElementById('f-status').value='pendente';
+  document.getElementById('ai-box').style.display='none';
+  document.getElementById('upload-title').textContent='📄 Arraste o boleto para leitura automática com IA';
+  document.getElementById('prev-doc').style.display='none';
+  document.getElementById('prev-comp').style.display='none';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function editItem(id) {
+  const item = data.find(d=>d.id===id); if(!item) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = 'Editar Lançamento';
+  document.getElementById('f-fornecedor').value = item.fornecedor||'';
+  document.getElementById('f-tipo').value = item.tipo||'boleto';
+  document.getElementById('f-valor').value = item.valor||'';
+  document.getElementById('f-vencimento').value = item.vencimento||'';
+  document.getElementById('f-desc-pt').value = item.desc_pt||'';
+  document.getElementById('f-desc-en').value = item.desc_en||'';
+  document.getElementById('f-status').value = item.status||'pendente';
+  document.getElementById('f-data-pag').value = item.data_pag||'';
+  document.getElementById('f-obs').value = item.obs||'';
+  document.getElementById('f-drive-doc').value = item.drive_doc||'';
+  document.getElementById('f-drive-comp').value = item.drive_comp||'';
+  document.getElementById('ai-box').style.display='none';
+  previewLink('f-drive-doc','prev-doc');
+  previewLink('f-drive-comp','prev-comp');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function salvar() {
+  const item = {
+    id: editId||genId(),
+    fornecedor: document.getElementById('f-fornecedor').value.trim(),
+    tipo: document.getElementById('f-tipo').value,
+    valor: parseFloat(document.getElementById('f-valor').value)||0,
+    vencimento: document.getElementById('f-vencimento').value,
+    desc_pt: document.getElementById('f-desc-pt').value.trim(),
+    desc_en: document.getElementById('f-desc-en').value.trim(),
+    status: document.getElementById('f-status').value,
+    data_pag: document.getElementById('f-data-pag').value,
+    obs: document.getElementById('f-obs').value.trim(),
+    drive_doc: document.getElementById('f-drive-doc').value.trim(),
+    drive_comp: document.getElementById('f-drive-comp').value.trim(),
+    criado_em: editId?(data.find(d=>d.id===editId)||{}).criado_em:new Date().toISOString()
+  };
+  if (!item.fornecedor) { alert('Preencha o fornecedor.'); return; }
+  if (editId) { const i=data.findIndex(d=>d.id===editId); data[i]=item; }
+  else data.unshift(item);
+  save(); closeModal(); renderTable();
+  toast(editId?'Lançamento atualizado! ✓':'Lançamento salvo! ✓');
+}
+
+function deleteItem(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  data=data.filter(d=>d.id!==id); save(); renderTable(); toast('Excluído.');
+}
+
+function markPago(id) {
+  const item=data.find(d=>d.id===id); if(!item) return;
+  item.status='pago';
+  if (!item.data_pag) item.data_pag=hoje.toISOString().slice(0,10);
+  save(); renderTable(); toast('Marcado como pago! ✅');
+}
+
+// ── DRIVE LINK HELPERS ────────────────────────────
+function previewLink(inputId, previewId) {
+  const val = document.getElementById(inputId).value.trim();
+  const prev = document.getElementById(previewId);
+  prev.style.display = val.startsWith('http') ? 'inline' : 'none';
+}
+function openLink(inputId) {
+  const url = document.getElementById(inputId).value.trim();
+  if (url) window.open(url, '_blank');
+}
+
+// ── FILE UPLOAD + AI ──────────────────────────────
+async function handleFile(file) {
+  if (!file) return;
+  document.getElementById('upload-title').textContent = '⏳ Lendo com IA...';
+  try {
+    const b64 = await toBase64(file);
+    const result = await extractWithAI(b64, file.type, file.name);
+    showAIBox(result);
+    fillForm(result);
+    document.getElementById('upload-title').textContent = '✅ '+file.name;
+    toast('✨ Dados extraídos pela IA!');
+  } catch(e) {
+    document.getElementById('upload-title').textContent = '📄 '+file.name+' (preencha manualmente)';
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); });
+}
+
+async function extractWithAI(b64, mime, name) {
+  const isPDF = mime==='application/pdf';
+  const content = isPDF
+    ? [{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:'Extraia do boleto: fornecedor, valor (número), vencimento (YYYY-MM-DD), descrição PT e EN. Responda SOMENTE JSON: {"fornecedor":"","valor":0,"vencimento":"","desc_pt":"","desc_en":""}'}]
+    : [{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:'Extraia do boleto: fornecedor, valor (número), vencimento (YYYY-MM-DD), descrição PT e EN. Responda SOMENTE JSON: {"fornecedor":"","valor":0,"vencimento":"","desc_pt":"","desc_en":""}'}];
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content}]})
+  });
+  const d = await res.json();
+  return JSON.parse((d.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+}
+
+function showAIBox(ex) {
+  document.getElementById('ai-box').style.display='block';
+  document.getElementById('ai-grid').innerHTML=`
+    <div class="ai-field"><span>Fornecedor</span>${ex.fornecedor||'—'}</div>
+    <div class="ai-field"><span>Valor</span>${fmtMoney(ex.valor)}</div>
+    <div class="ai-field"><span>Vencimento</span>${fmtDate(ex.vencimento)}</div>
+    <div class="ai-field"><span>Descrição EN</span>${ex.desc_en||'—'}</div>`;
+}
+
+function fillForm(ex) {
+  if(ex.fornecedor) document.getElementById('f-fornecedor').value=ex.fornecedor;
+  if(ex.valor) document.getElementById('f-valor').value=ex.valor;
+  if(ex.vencimento) document.getElementById('f-vencimento').value=ex.vencimento;
+  if(ex.desc_pt) document.getElementById('f-desc-pt').value=ex.desc_pt;
+  if(ex.desc_en) document.getElementById('f-desc-en').value=ex.desc_en;
+}
+
+// ── FECHAMENTO ────────────────────────────────────
+function renderFechamento() {
+  const keys=[...new Set(data.map(d=>monthKey(d.vencimento)).filter(Boolean))].sort().reverse();
+  const sel=document.getElementById('select-mes-fech');
+  const cur=sel.value;
+  sel.innerHTML=keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${monthLabel(k)}</option>`).join('');
+  if(!sel.value&&keys.length) sel.value=keys[0];
+  const mk=sel.value;
+  document.getElementById('fech-title').textContent='Lançamentos — '+(mk?monthLabel(mk):'');
+  const rows=data.filter(d=>monthKey(d.vencimento)===mk).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+  const total=rows.reduce((s,d)=>s+Number(d.valor||0),0);
+  const bm={pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm={pago:'Pago',pendente:'Pendente',vencido:'Vencido',programado:'Programado'};
+
+  document.getElementById('fech-tbody').innerHTML=rows.length
+    ?rows.map(item=>{
+      const s=calcStatus(item);
+      const docChip=item.drive_doc?`<a class="file-chip chip-doc" href="${item.drive_doc}" target="_blank">📄</a>`:'<span style="color:var(--text3);font-size:11px">—</span>';
+      const compChip=item.drive_comp?`<a class="file-chip chip-comp" href="${item.drive_comp}" target="_blank">🧾</a>`:'';
+      return `<tr>
+        <td class="mono" style="font-size:12px">${fmtDate(item.data_pag||item.vencimento)}</td>
+        <td>${item.fornecedor||'—'}</td>
+        <td style="color:var(--text2)">${item.desc_en||item.desc_pt||'—'}</td>
+        <td><span class="badge badge-neutral">${item.tipo||'—'}</span></td>
+        <td class="mono text-right">${Number(item.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+        <td><div style="display:flex;gap:4px">${docChip}${compChip}</div></td>
+        <td><span class="badge ${bm[s]}">${lm[s]}</span></td>
+      </tr>`;
+    }).join('')
+    :'<tr><td colspan="7" class="empty-state">Nenhum lançamento neste mês.</td></tr>';
+
+  document.getElementById('fech-total').textContent=fmtMoney(total);
+
+  const semComp=rows.filter(d=>d.status==='pago'&&!d.drive_comp).length;
+  const semDoc=rows.filter(d=>!d.drive_doc).length;
+  const semEn=rows.filter(d=>!d.desc_en).length;
+  const pend=rows.filter(d=>calcStatus(d)!=='pago').length;
+  const checks=[
+    {ok:rows.length>0, text:`${rows.length} lançamento(s) registrado(s)`},
+    {ok:pend===0, text:pend===0?'Todos os boletos pagos':`${pend} boleto(s) ainda não pago(s)`},
+    {ok:semComp===0, text:semComp===0?'Todos os comprovantes vinculados':`${semComp} pagamento(s) sem comprovante no Drive`},
+    {ok:semDoc===0, text:semDoc===0?'Todos os documentos vinculados':`${semDoc} lançamento(s) sem documento no Drive`},
+    {ok:semEn===0, text:semEn===0?'Todas as descrições em inglês preenchidas':`${semEn} lançamento(s) sem descrição em inglês`},
+  ];
+  document.getElementById('checklist-wrap').innerHTML=checks.map(c=>`
+    <div class="check-item">
+      <div class="check-dot ${c.ok?'dot-ok':'dot-fail'}">${c.ok?'✓':'!'}</div>
+      <div style="font-size:13px;color:${c.ok?'var(--text)':'var(--danger)'}">${c.text}</div>
+    </div>`).join('');
+
+  const allOk=checks.every(c=>c.ok);
+  document.getElementById('closing-icon').style.background=allOk?'var(--success-light)':'var(--warn-light)';
+  document.getElementById('closing-icon').textContent=allOk?'✅':'⏰';
+  document.getElementById('closing-title').textContent=allOk?'Tudo pronto para envio!':`Pendências em ${mk?monthLabel(mk):''}`;
+  document.getElementById('closing-sub').textContent=allOk?`Fechamento de ${monthLabel(mk)} completo — pode enviar ao dono`:'Resolva os itens do checklist antes de enviar.';
+}
+
+// ── RELATÓRIO ─────────────────────────────────────
+function renderRelatorio() {
+  const byMonth={};
+  data.forEach(item=>{ const k=monthKey(item.vencimento)||'sem-data'; if(!byMonth[k]) byMonth[k]=[]; byMonth[k].push(item); });
+  const keys=Object.keys(byMonth).sort().reverse();
+  if(!keys.length){document.getElementById('relatorio-content').innerHTML='<div class="empty-state">Nenhum dado.</div>';return;}
+  const bm={pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm={pago:'Pago',pendente:'Pendente',vencido:'Vencido',programado:'Programado'};
+  document.getElementById('relatorio-content').innerHTML=keys.map(k=>{
+    const items=byMonth[k];
+    const total=items.reduce((s,d)=>s+Number(d.valor||0),0);
+    const pagos=items.filter(d=>calcStatus(d)==='pago').length;
+    return `<div class="report-section" style="margin-bottom:16px">
+      <div class="report-header">
+        <h3>${k==='sem-data'?'Sem data':monthLabel(k)}</h3>
+        <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text2)">
+          <span>${pagos}/${items.length} pagos</span>
+          <strong class="mono" style="font-size:14px;color:var(--text)">${fmtMoney(total)}</strong>
+        </div>
+      </div>
+      <table style="width:100%">
+        <thead><tr><th>Vencimento</th><th>Fornecedor</th><th>Descrição (EN)</th><th>Tipo</th><th class="text-right">Valor</th><th>Status</th><th>Drive</th></tr></thead>
+        <tbody>${items.map(item=>{
+          const s=calcStatus(item);
+          const doc=item.drive_doc?`<a class="file-chip chip-doc" href="${item.drive_doc}" target="_blank">📄 Doc</a>`:'';
+          const comp=item.drive_comp?`<a class="file-chip chip-comp" href="${item.drive_comp}" target="_blank">🧾 Comp</a>`:'';
+          return `<tr>
+            <td class="mono" style="font-size:12px">${fmtDate(item.vencimento)}</td>
+            <td>${item.fornecedor||'—'}</td>
+            <td style="color:var(--text2)">${item.desc_en||item.desc_pt||'—'}</td>
+            <td><span class="badge badge-neutral">${item.tipo||'—'}</span></td>
+            <td class="mono text-right">${fmtMoney(item.valor)}</td>
+            <td><span class="badge ${bm[s]}">${lm[s]}</span></td>
+            <td><div style="display:flex;gap:4px">${doc}${comp||'<span style="color:var(--text3);font-size:11px">—</span>'}</div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+// ── CSV ───────────────────────────────────────────
+function exportCSV() {
+  const h=['Vencimento','Fornecedor','Descricao PT','Descricao EN','Tipo','Valor','Status','Data Pagamento','Link Documento','Link Comprovante','Obs'];
+  const rows=data.map(d=>[d.vencimento,d.fornecedor,d.desc_pt,d.desc_en,d.tipo,d.valor,calcStatus(d),d.data_pag,d.drive_doc,d.drive_comp,d.obs]
+    .map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`PILE_BPO_${hoje.toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('CSV exportado!');
+}
+
+// ── TOAST ─────────────────────────────────────────
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── INIT ──────────────────────────────────────────
+renderTable();
+</script>
+</body>
+</html>
