@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PILE — BPO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F3EE;
+  --surface: #FFFFFF;
+  --surface2: #F0EDE6;
+  --border: #E2DDD5;
+  --text: #1A1916;
+  --text2: #6B6860;
+  --text3: #A8A49E;
+  --accent: #1A3C2E;
+  --accent-light: #E8F0EC;
+  --accent-mid: #4A7C61;
+  --danger: #C13D2E;
+  --danger-light: #FAEDEB;
+  --warn: #A0621A;
+  --warn-light: #FDF3E7;
+  --success: #1A6B3A;
+  --success-light: #E8F5EE;
+  --info: #185FA5;
+  --info-light: #E6F1FB;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 224px; background: var(--accent); padding: 0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; }
+.sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-logo .company { font-size: 20px; font-weight: 600; color: #fff; letter-spacing: 0.06em; }
+.sidebar-logo .sub { font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 3px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nav { padding: 12px 0; flex: 1; }
+.nav-section { font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.3); padding: 12px 20px 6px; }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 20px; color: rgba(255,255,255,0.6); font-size: 13px; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.nav-item.active { color: #fff; background: rgba(255,255,255,0.11); border-left-color: #7DB89A; }
+.nav-badge { margin-left: auto; background: #C13D2E; color: #fff; font-size: 10px; font-family: var(--mono); padding: 1px 7px; border-radius: 20px; min-width: 18px; text-align: center; }
+.nav-badge.ok { background: rgba(255,255,255,0.2); }
+.sidebar-drive { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.drive-status { display: flex; align-items: center; gap: 8px; }
+.drive-dot { width: 7px; height: 7px; border-radius: 50%; background: #E24B4A; flex-shrink: 0; }
+.drive-dot.connected { background: #639922; }
+.drive-label { font-size: 11px; color: rgba(255,255,255,0.5); }
+.drive-btn { margin-top: 8px; width: 100%; padding: 7px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-sm); color: rgba(255,255,255,0.8); font-size: 12px; font-family: 'DM Sans',sans-serif; cursor: pointer; transition: all 0.15s; text-align: center; }
+.drive-btn:hover { background: rgba(255,255,255,0.18); }
+.main { margin-left: 224px; flex: 1; padding: 28px 32px; max-width: calc(100vw - 224px); }
+
+.topbar { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; }
+.page-title { font-size: 21px; font-weight: 600; color: var(--text); }
+.page-subtitle { font-size: 12px; color: var(--text2); margin-top: 3px; }
+.topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 15px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-family: 'DM Sans',sans-serif; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #254D3B; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface2); }
+.btn-success { background: var(--success-light); color: var(--success); border: 1px solid #b8ddc6; }
+.btn-success:hover { background: #d4edde; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 22px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+.stat-value { font-size: 22px; font-weight: 600; font-family: var(--mono); }
+.stat-value.danger { color: var(--danger); }
+.stat-value.warn { color: var(--warn); }
+.stat-value.success { color: var(--success); }
+.stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+.toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-group { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.filter-btn { padding: 6px 13px; font-size: 12px; cursor: pointer; border: none; background: transparent; color: var(--text2); font-family: 'DM Sans',sans-serif; transition: all 0.15s; }
+.filter-btn.active { background: var(--accent); color: #fff; }
+.search-box { flex: 1; display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 11px; gap: 7px; min-width: 180px; }
+.search-box input { border: none; outline: none; font-size: 13px; background: transparent; color: var(--text); width: 100%; padding: 7px 0; font-family: 'DM Sans',sans-serif; }
+.search-box input::placeholder { color: var(--text3); }
+
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--surface2); }
+th { padding: 10px 14px; text-align: left; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #FAFAF8; }
+
+.badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge-pago { background: var(--success-light); color: var(--success); }
+.badge-pendente { background: var(--warn-light); color: var(--warn); }
+.badge-vencido { background: var(--danger-light); color: var(--danger); }
+.badge-programado { background: var(--info-light); color: var(--info); }
+.badge-neutral { background: var(--surface2); color: var(--text2); }
+.badge-drive { background: #E8F0FE; color: #1A56DB; }
+.badge-ia { background: #F0EBF8; color: #6B3DA8; }
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* MODAL */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; }
+.modal { background: var(--surface); border-radius: 14px; width: 580px; max-width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,0.22); }
+.modal-header { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 17px; padding: 3px 7px; border-radius: 4px; }
+.modal-close:hover { background: var(--surface2); color: var(--text); }
+.modal-body { padding: 20px 22px; }
+.modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group.full { grid-column: 1/-1; }
+label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+input, select, textarea { padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Sans',sans-serif; background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent-mid); background: var(--surface); }
+textarea { resize: vertical; min-height: 65px; }
+.form-sep { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin: 14px 0 2px; padding-bottom: 8px; border-bottom: 1px solid var(--border); grid-column: 1/-1; }
+
+/* UPLOAD ZONE */
+.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 28px 20px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--bg); position: relative; }
+.upload-zone:hover, .upload-zone.drag { border-color: var(--accent-mid); background: var(--accent-light); }
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.upload-zone-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-zone-title { font-size: 13px; font-weight: 500; color: var(--text); }
+.upload-zone-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+/* AI RESULT */
+.ai-result { background: #F7F3FF; border: 1px solid #D8C8F5; border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 12px; display: none; }
+.ai-result-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #6B3DA8; margin-bottom: 8px; }
+.ai-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ai-field { font-size: 12px; }
+.ai-field span { color: var(--text3); display: block; font-size: 10px; margin-bottom: 1px; }
+
+/* DRIVE PANEL */
+.drive-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; }
+.drive-panel-header { padding: 14px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.drive-panel-header h3 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.drive-folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; padding: 16px 18px; }
+.drive-folder { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+.drive-folder:hover { border-color: var(--accent-mid); background: var(--accent-light); }
+.drive-folder-icon { font-size: 22px; flex-shrink: 0; }
+.drive-folder-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.drive-folder-count { font-size: 11px; color: var(--text3); }
+
+/* SCAN MODAL */
+.scan-progress { display: flex; flex-direction: column; gap: 10px; }
+.scan-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--bg); border-radius: var(--radius-sm); font-size: 12px; }
+.scan-item-icon { font-size: 16px; flex-shrink: 0; }
+.scan-item-name { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scan-item-status { font-size: 11px; color: var(--text3); white-space: nowrap; }
+.scan-item.done .scan-item-status { color: var(--success); }
+.scan-item.error .scan-item-status { color: var(--danger); }
+.spin { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FECHAMENTO */
+.closing-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.closing-info { display: flex; align-items: center; gap: 13px; }
+.closing-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+
+/* ACTIONS */
+.actions-col { display: flex; gap: 5px; }
+.icon-btn { background: none; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; padding: 4px 6px; font-size: 12px; color: var(--text2); transition: all 0.15s; }
+.icon-btn:hover { background: var(--surface2); }
+.icon-btn.danger:hover { background: var(--danger-light); color: var(--danger); border-color: #EBC4BF; }
+
+/* FILE CHIPS */
+.file-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; text-decoration: none; cursor: pointer; transition: all 0.15s; }
+.file-chip.drive { background: #E8F0FE; color: #1A56DB; border: 1px solid #C5D8FA; }
+.file-chip.drive:hover { background: #C5D8FA; }
+.file-chip.local { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+
+/* REPORT */
+.report-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.report-header { padding: 13px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.report-header h3 { font-size: 13px; font-weight: 600; }
+
+/* CHECKLIST */
+.check-item { display: flex; align-items: center; gap: 9px; padding: 9px 18px; border-bottom: 1px solid var(--border); }
+.check-item:last-child { border-bottom: none; }
+.check-dot { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.check-dot.ok { background: var(--success-light); color: var(--success); }
+.check-dot.fail { background: var(--danger-light); color: var(--danger); }
+.check-dot.warn { background: var(--warn-light); color: var(--warn); }
+.check-text { font-size: 13px; }
+.check-text.fail { color: var(--danger); }
+.check-text.warn { color: var(--warn); }
+
+/* TOAST */
+.toast { position: fixed; bottom: 22px; right: 22px; background: var(--accent); color: #fff; padding: 11px 16px; border-radius: var(--radius-sm); font-size: 13px; z-index: 300; display: none; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-width: 320px; }
+.toast.show { display: block; animation: slideup 0.22s ease; }
+@keyframes slideup { from { opacity:0;transform:translateY(6px); } to { opacity:1;transform:translateY(0); } }
+
+.mono { font-family: var(--mono); }
+.text-right { text-align: right; }
+.empty-state { text-align: center; padding: 50px; color: var(--text3); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="company">PILE</div>
+    <div class="sub">BPO — Financeiro</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Operação</div>
+    <div class="nav-item active" onclick="showView('boletos',this)">
+      <span>📋</span> Boletos
+      <span class="nav-badge" id="badge-urgente">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('drive',this)">
+      <span>📂</span> Google Drive
+    </div>
+    <div class="nav-section">Relatórios</div>
+    <div class="nav-item" onclick="showView('fechamento',this)">
+      <span>📅</span> Fechamento Mensal
+    </div>
+    <div class="nav-item" onclick="showView('relatorio',this)">
+      <span>📊</span> Relatório
+    </div>
+  </div>
+  <div class="sidebar-drive">
+    <div class="drive-status">
+      <div class="drive-dot" id="drive-dot"></div>
+      <div class="drive-label" id="drive-label">Drive desconectado</div>
+    </div>
+    <button class="drive-btn" id="drive-auth-btn" onclick="handleDriveAuth()">Conectar Google Drive</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- BOLETOS -->
+  <div class="view active" id="view-boletos">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Boletos & Pagamentos</div>
+        <div class="page-subtitle">Controle de despesas com documentos vinculados</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openScanModal()">🔍 Varrer Drive</button>
+        <button class="btn btn-primary" onclick="openModal()">+ Novo Lançamento</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Total do Mês</div>
+        <div class="stat-value mono" id="stat-total">R$ 0,00</div>
+        <div class="stat-sub" id="stat-mes-label">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pendentes</div>
+        <div class="stat-value warn" id="stat-pendentes">0</div>
+        <div class="stat-sub">Aguardando pagamento</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Vencidos</div>
+        <div class="stat-value danger" id="stat-vencidos">0</div>
+        <div class="stat-sub">Ação imediata</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pagos no Mês</div>
+        <div class="stat-value success" id="stat-pagos">0</div>
+        <div class="stat-sub">Com comprovante</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="setFilter('todos',this)">Todos</button>
+        <button class="filter-btn" onclick="setFilter('pendente',this)">Pendentes</button>
+        <button class="filter-btn" onclick="setFilter('vencido',this)">Vencidos</button>
+        <button class="filter-btn" onclick="setFilter('programado',this)">Programados</button>
+        <button class="filter-btn" onclick="setFilter('pago',this)">Pagos</button>
+      </div>
+      <div class="search-box">
+        <span style="color:var(--text3)">🔍</span>
+        <input type="text" placeholder="Buscar fornecedor, descrição..." id="search-input" oninput="renderTable()">
+      </div>
+      <select id="mes-select" onchange="renderTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text2);">
+        <option value="">Todos os meses</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vencimento</th>
+            <th>Fornecedor</th>
+            <th>Descrição (EN)</th>
+            <th>Tipo</th>
+            <th class="text-right">Valor</th>
+            <th>Status</th>
+            <th>Documentos</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="boletos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GOOGLE DRIVE -->
+  <div class="view" id="view-drive">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Google Drive</div>
+        <div class="page-subtitle">Estrutura de pastas e documentos vinculados</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="createFolderStructure()">📁 Criar estrutura de pastas</button>
+        <button class="btn btn-success btn-sm" onclick="openScanModal()">🔄 Varrer e importar</button>
+      </div>
+    </div>
+
+    <div id="drive-not-connected" style="display:none">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:48px;text-align:center;">
+        <div style="font-size:40px;margin-bottom:14px">📂</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:6px">Conecte o Google Drive</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px">Use o botão na barra lateral para autenticar com sua conta Google</div>
+        <button class="btn btn-primary" onclick="handleDriveAuth()">Conectar agora</button>
+      </div>
+    </div>
+
+    <div id="drive-connected-content">
+      <div class="drive-panel">
+        <div class="drive-panel-header">
+          <h3>📁 Estrutura de Pastas — PILE</h3>
+          <span style="font-size:11px;color:var(--text3)" id="drive-root-info"></span>
+        </div>
+        <div class="drive-folder-grid" id="drive-folder-grid">
+          <div class="empty-state" style="grid-column:1/-1">Clique em "Criar estrutura de pastas" para configurar o Drive</div>
+        </div>
+      </div>
+
+      <div class="drive-panel">
+        <div class="drive-panel-header">
+          <h3>📄 Arquivos Recentes no Drive</h3>
+          <button class="btn btn-ghost btn-sm" onclick="refreshDriveFiles()">Atualizar</button>
+        </div>
+        <table style="width:100%">
+          <thead><tr>
+            <th>Arquivo</th><th>Pasta</th><th>Modificado</th><th>Vinculado</th><th></th>
+          </tr></thead>
+          <tbody id="drive-files-tbody">
+            <tr><td colspan="5" class="empty-state">Nenhum arquivo listado ainda.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FECHAMENTO -->
+  <div class="view" id="view-fechamento">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Fechamento Mensal</div>
+        <div class="page-subtitle">Consolidação para envio ao dono até dia 02 ou 03</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Exportar CSV</button>
+      </div>
+    </div>
+
+    <div class="closing-card">
+      <div class="closing-info">
+        <div class="closing-icon" id="closing-icon-wrap" style="background:var(--warn-light)">⏰</div>
+        <div>
+          <div style="font-size:14px;font-weight:600" id="closing-title">Verificando...</div>
+          <div style="font-size:12px;color:var(--text2)" id="closing-sub"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="select-mes-fech" onchange="renderFechamento()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);"></select>
+        <button class="btn btn-primary btn-sm" onclick="exportCSV()">Gerar relatório</button>
+      </div>
+    </div>
+
+    <div class="report-section">
+      <div class="report-header"><h3 id="fech-title">Lançamentos do Mês</h3></div>
+      <table style="width:100%">
+        <thead><tr>
+          <th>Data Pgto</th><th>Fornecedor</th><th>Descrição (EN)</th>
+          <th>Tipo</th><th class="text-right">Valor</th><th>Docs</th>
+        </tr></thead>
+        <tbody id="fech-tbody"></tbody>
+        <tfoot>
+          <tr style="background:var(--surface2)">
+            <td colspan="4" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--text2)">TOTAL</td>
+            <td style="padding:11px 14px;font-size:14px;font-weight:600;font-family:var(--mono);text-align:right" id="fech-total"></td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="report-section">
+      <div class="report-header"><h3>Checklist de Envio</h3></div>
+      <div id="checklist-wrap"></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIO -->
+  <div class="view" id="view-relatorio">
+    <div class="topbar">
+      <div><div class="page-title">Relatório Geral</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Exportar CSV</button>
+    </div>
+    <div id="relatorio-content"></div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODAL LANÇAMENTO -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Novo Lançamento</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- UPLOAD PDF -->
+      <div class="upload-zone" id="upload-zone">
+        <input type="file" accept=".pdf,.jpg,.jpeg,.png" id="file-input" onchange="handleFileUpload(this.files[0])">
+        <div class="upload-zone-icon">📄</div>
+        <div class="upload-zone-title">Arraste o boleto ou clique para selecionar</div>
+        <div class="upload-zone-sub">PDF, JPG ou PNG — a IA vai extrair os dados automaticamente</div>
+      </div>
+
+      <div class="ai-result" id="ai-result">
+        <div class="ai-result-title">✨ Dados extraídos pela IA</div>
+        <div class="ai-result-grid" id="ai-result-grid"></div>
+      </div>
+
+      <div class="form-grid" style="margin-top:16px">
+        <div class="form-sep">Dados do Documento</div>
+        <div class="form-group">
+          <label>Fornecedor / Empresa</label>
+          <input type="text" id="f-fornecedor" placeholder="Ex: CEMIG, Aluguel...">
+        </div>
+        <div class="form-group">
+          <label>Tipo de Documento</label>
+          <select id="f-tipo-doc">
+            <option value="boleto">Boleto</option>
+            <option value="nota">Nota Fiscal</option>
+            <option value="recibo">Recibo</option>
+            <option value="fatura">Fatura</option>
+            <option value="contrato">Contrato</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input type="number" id="f-valor" placeholder="0,00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Vencimento</label>
+          <input type="date" id="f-vencimento">
+        </div>
+        <div class="form-group full">
+          <label>Descrição (português)</label>
+          <input type="text" id="f-descricao-pt" placeholder="Ex: Aluguel do galpão — março/2025">
+        </div>
+        <div class="form-group full">
+          <label>Descrição em inglês <span style="font-weight:400;text-transform:none;letter-spacing:0">(para planilha)</span></label>
+          <input type="text" id="f-descricao-en" placeholder="Ex: Warehouse rent — March/2025">
+        </div>
+
+        <div class="form-sep">Pagamento</div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status" onchange="togglePagFields()">
+            <option value="pendente">Pendente</option>
+            <option value="programado">Programado</option>
+            <option value="pago">Pago</option>
+          </select>
+        </div>
+        <div class="form-group" id="f-data-pag-group">
+          <label>Data de Pagamento</label>
+          <input type="date" id="f-data-pagamento">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="f-obs" placeholder="Número do boleto, anotações..."></textarea>
+        </div>
+
+        <div class="form-sep">Documentos no Drive</div>
+        <div class="form-group full" id="drive-link-group">
+          <label>Link do documento no Drive (boleto/nota/recibo)</label>
+          <input type="text" id="f-drive-doc" placeholder="https://drive.google.com/...">
+          <div style="font-size:11px;color:var(--text3);margin-top:3px" id="drive-doc-name"></div>
+        </div>
+        <div class="form-group full" id="drive-comp-group">
+          <label>Link do comprovante de pagamento</label>
+          <input type="text" id="f-drive-comp" placeholder="https://drive.google.com/...">
+          <div style="font-size:11px;color:var(--text3);margin-top:3px" id="drive-comp-name"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvar()">Salvar Lançamento</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SCAN DRIVE -->
+<div class="overlay" id="scan-overlay">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title">🔍 Varrer Google Drive</div>
+      <button class="modal-close" onclick="document.getElementById('scan-overlay').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px">
+        O sistema vai ler os PDFs nas pastas do Drive, extrair dados com IA e criar lançamentos automaticamente.
+      </div>
+      <div id="scan-progress-wrap">
+        <div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">
+          Clique em "Iniciar Varredura" para começar.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('scan-overlay').classList.remove('open')">Fechar</button>
+      <button class="btn btn-primary" id="scan-btn" onclick="startScan()">Iniciar Varredura</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = 'pile_bpo_v2';
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let editId = null;
+let filterStatus = 'todos';
+let driveConnected = false;
+let driveAccessToken = null;
+let driveFolders = {}; // { name: folderId }
+let driveFiles = [];
+
+const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+const GOOGLE_CLIENT_ID = '87604701971-2nf7osrigaba2366rkpp0f1fc61r09ep.apps.googleusercontent.com'; // User will replace
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmtDate(s) { if(!s) return '—'; const [y,m,d]=s.split('-'); return `${d}/${m}/${y}`; }
+function fmtMoney(v) { return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function monthKey(s) { if(!s) return ''; const [y,m]=s.split('-'); return `${y}-${m}`; }
+function monthLabel(k) { if(!k) return ''; const [y,m]=k.split('-'); return meses[parseInt(m)-1]+' '+y; }
+const hoje = new Date();
+
+function calcStatus(item) {
+  if (item.status === 'pago') return 'pago';
+  if (item.status === 'programado') return 'programado';
+  if (item.vencimento) {
+    const v = new Date(item.vencimento+'T12:00:00');
+    if (v < hoje) return 'vencido';
+  }
+  return 'pendente';
+}
+
+// ═══════════════════════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════════════════════
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='fechamento') renderFechamento();
+  if(name==='relatorio') renderRelatorio();
+  if(name==='drive') renderDriveView();
+}
+
+// ═══════════════════════════════════════════════════
+// GOOGLE DRIVE AUTH (OAuth2 PKCE / token flow)
+// ═══════════════════════════════════════════════════
+function handleDriveAuth() {
+  // Show setup instructions if no client ID
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+    showSetupInstructions();
+    return;
+  }
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.href.split('?')[0],
+    response_type: 'token',
+    scope: DRIVE_SCOPE,
+    prompt: 'consent'
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/auth?' + params;
+}
+
+function checkDriveToken() {
+  // Check URL hash for token after OAuth redirect
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.slice(1));
+    driveAccessToken = params.get('access_token');
+    if (driveAccessToken) {
+      setDriveConnected(true);
+      history.replaceState(null,'',window.location.pathname);
+      toast('Google Drive conectado!');
+    }
+  }
+  // Check saved token
+  const saved = localStorage.getItem('pile_drive_token');
+  if (saved && !driveAccessToken) {
+    driveAccessToken = saved;
+    setDriveConnected(true);
+  }
+  if (driveAccessToken) {
+    localStorage.setItem('pile_drive_token', driveAccessToken);
+  }
+}
+
+function setDriveConnected(v) {
+  driveConnected = v;
+  document.getElementById('drive-dot').className = 'drive-dot' + (v?' connected':'');
+  document.getElementById('drive-label').textContent = v ? 'Drive conectado' : 'Drive desconectado';
+  document.getElementById('drive-auth-btn').textContent = v ? 'Desconectar' : 'Conectar Google Drive';
+  document.getElementById('drive-auth-btn').onclick = v ? disconnectDrive : handleDriveAuth;
+  if(document.getElementById('drive-not-connected'))
+    document.getElementById('drive-not-connected').style.display = v?'none':'block';
+  if(document.getElementById('drive-connected-content'))
+    document.getElementById('drive-connected-content').style.display = v?'block':'none';
+}
+
+function disconnectDrive() {
+  driveAccessToken = null;
+  localStorage.removeItem('pile_drive_token');
+  setDriveConnected(false);
+  toast('Drive desconectado.');
+}
+
+function showSetupInstructions() {
+  const msg = `Para conectar o Google Drive:\n\n1. Acesse console.cloud.google.com\n2. Crie um projeto e ative a "Google Drive API"\n3. Em "Credenciais", crie um OAuth 2.0 Client ID (tipo: Web)\n4. Adicione a URL deste arquivo como "Authorized JavaScript origins" e "Authorized redirect URIs"\n5. Copie o Client ID e substitua '87604701971-2nf7osrigaba2366rkpp0f1fc61r09ep.apps.googleusercontent.com' no código\n\nDeseja continuar em modo DEMO (sem Drive real)?`;
+  if (confirm(msg)) {
+    enableDemoMode();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// DEMO MODE (simulates Drive)
+// ═══════════════════════════════════════════════════
+function enableDemoMode() {
+  driveConnected = true;
+  driveAccessToken = 'DEMO';
+  setDriveConnected(true);
+  driveFolders = {
+    'PILE': 'demo_root',
+    'PILE/A Pagar': 'demo_apagar',
+    'PILE/Pagos/2025-05': 'demo_pagos_mai',
+    'PILE/Pagos/2025-04': 'demo_pagos_abr',
+    'PILE/Comprovantes/2025-05': 'demo_comp_mai'
+  };
+  driveFiles = [
+    { id:'df1', name:'boleto_aluguel_maio.pdf', folder:'PILE/A Pagar', modifiedTime:'2025-05-01', webViewLink:'#', linked:false },
+    { id:'df2', name:'nota_fiscal_materiais.pdf', folder:'PILE/A Pagar', modifiedTime:'2025-05-02', webViewLink:'#', linked:false },
+    { id:'df3', name:'comprovante_energia_abril.pdf', folder:'PILE/Comprovantes/2025-04', modifiedTime:'2025-04-28', webViewLink:'#', linked:true },
+  ];
+  renderDriveView();
+  toast('Modo demo ativo — Drive simulado');
+}
+
+// ═══════════════════════════════════════════════════
+// DRIVE API CALLS
+// ═══════════════════════════════════════════════════
+async function driveAPI(path, opts={}) {
+  if (driveAccessToken === 'DEMO') return null;
+  const res = await fetch('https://www.googleapis.com/drive/v3/'+path, {
+    headers: { Authorization: 'Bearer '+driveAccessToken, ...opts.headers },
+    ...opts
+  });
+  if (!res.ok) throw new Error('Drive API error: '+res.status);
+  return res.json();
+}
+
+async function createFolderStructure() {
+  if (!driveConnected) { toast('Conecte o Drive primeiro.'); return; }
+  toast('Criando estrutura de pastas...');
+
+  if (driveAccessToken === 'DEMO') {
+    const now = new Date();
+    const mesAtual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    driveFolders = {
+      'PILE': 'demo_root',
+      'PILE/A Pagar': 'demo_apagar',
+      [`PILE/Pagos/${mesAtual}`]: 'demo_pagos_cur',
+      [`PILE/Comprovantes/${mesAtual}`]: 'demo_comp_cur',
+    };
+    renderDriveView();
+    toast('✅ Estrutura criada no Drive!');
+    return;
+  }
+
+  try {
+    // Create root PILE folder
+    const root = await driveAPI('files', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name:'PILE', mimeType:'application/vnd.google-apps.folder' })
+    });
+    driveFolders['PILE'] = root.id;
+
+    const subs = ['A Pagar', 'Pagos', 'Comprovantes'];
+    for (const sub of subs) {
+      const f = await driveAPI('files', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ name:sub, mimeType:'application/vnd.google-apps.folder', parents:[root.id] })
+      });
+      driveFolders[`PILE/${sub}`] = f.id;
+    }
+
+    const now = new Date();
+    const mesAtual = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    for (const parent of ['Pagos', 'Comprovantes']) {
+      const p = driveFolders[`PILE/${parent}`];
+      const mf = await driveAPI('files', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ name:mesAtual, mimeType:'application/vnd.google-apps.folder', parents:[p] })
+      });
+      driveFolders[`PILE/${parent}/${mesAtual}`] = mf.id;
+    }
+
+    localStorage.setItem('pile_drive_folders', JSON.stringify(driveFolders));
+    renderDriveView();
+    toast('✅ Estrutura de pastas criada no Drive!');
+  } catch(e) {
+    toast('Erro ao criar pastas: '+e.message);
+  }
+}
+
+async function refreshDriveFiles() {
+  if (!driveConnected) return;
+  if (driveAccessToken === 'DEMO') { renderDriveFiles(); return; }
+  try {
+    const rootId = driveFolders['PILE'];
+    if (!rootId) { toast('Crie a estrutura de pastas primeiro.'); return; }
+    const res = await driveAPI(`files?q='${rootId}'+in+parents+and+trashed=false&fields=files(id,name,modifiedTime,webViewLink,parents)&orderBy=modifiedTime+desc`);
+    driveFiles = (res.files||[]).map(f => ({ ...f, folder:'PILE', linked: data.some(d=>d.drive_doc===f.webViewLink||d.drive_comp===f.webViewLink) }));
+    renderDriveFiles();
+  } catch(e) { toast('Erro ao listar arquivos: '+e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+// DRIVE VIEW RENDER
+// ═══════════════════════════════════════════════════
+function renderDriveView() {
+  if (!driveConnected) {
+    document.getElementById('drive-not-connected').style.display = 'block';
+    document.getElementById('drive-connected-content').style.display = 'none';
+    return;
+  }
+  document.getElementById('drive-not-connected').style.display = 'none';
+  document.getElementById('drive-connected-content').style.display = 'block';
+
+  const folders = Object.keys(driveFolders);
+  const grid = document.getElementById('drive-folder-grid');
+  if (!folders.length) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Clique em "Criar estrutura de pastas" para configurar</div>';
+  } else {
+    const icons = { 'A Pagar':'📬', 'Pagos':'✅', 'Comprovantes':'🧾', 'PILE':'🏢' };
+    grid.innerHTML = folders.map(f => {
+      const parts = f.split('/');
+      const name = parts[parts.length-1];
+      const icon = icons[name] || '📁';
+      const depth = parts.length - 1;
+      return `<div class="drive-folder" style="margin-left:${depth*8}px" onclick="toast('Pasta: ${f}')">
+        <div class="drive-folder-icon">${icon}</div>
+        <div><div class="drive-folder-name">${name}</div><div class="drive-folder-count" style="font-size:10px;color:var(--text3)">${f}</div></div>
+      </div>`;
+    }).join('');
+  }
+  renderDriveFiles();
+}
+
+function renderDriveFiles() {
+  const tbody = document.getElementById('drive-files-tbody');
+  if (!driveFiles.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum arquivo. Clique em "Atualizar" ou use o modo demo.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = driveFiles.map(f => `
+    <tr>
+      <td style="font-weight:500">${f.name}</td>
+      <td><span class="badge badge-neutral">${f.folder}</span></td>
+      <td style="font-size:12px;color:var(--text3)">${f.modifiedTime ? fmtDate(f.modifiedTime.slice(0,10)) : '—'}</td>
+      <td>${f.linked ? '<span class="badge badge-pago">✓ Vinculado</span>' : '<span class="badge badge-pendente">Não vinculado</span>'}</td>
+      <td><div class="actions-col">
+        ${!f.linked ? `<button class="icon-btn" onclick="linkFileToNew('${f.id}','${f.name}','${f.webViewLink}')">Vincular</button>` : ''}
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+function linkFileToNew(id, name, url) {
+  openModal();
+  setTimeout(() => {
+    document.getElementById('f-drive-doc').value = url;
+    document.getElementById('drive-doc-name').textContent = '📎 '+name;
+    toast('Arquivo pré-vinculado ao formulário');
+  }, 100);
+}
+
+// ═══════════════════════════════════════════════════
+// SCAN MODAL
+// ═══════════════════════════════════════════════════
+function openScanModal() {
+  if (!driveConnected) { toast('Conecte o Drive primeiro.'); return; }
+  document.getElementById('scan-progress-wrap').innerHTML = '<div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Clique em "Iniciar Varredura" para começar.</div>';
+  document.getElementById('scan-btn').disabled = false;
+  document.getElementById('scan-btn').textContent = 'Iniciar Varredura';
+  document.getElementById('scan-overlay').classList.add('open');
+}
+
+async function startScan() {
+  document.getElementById('scan-btn').disabled = true;
+  document.getElementById('scan-btn').textContent = 'Varrendo...';
+
+  const filesToScan = driveFiles.filter(f => !f.linked && f.name.toLowerCase().includes('.pdf'));
+  if (!filesToScan.length && driveAccessToken !== 'DEMO') {
+    document.getElementById('scan-progress-wrap').innerHTML = '<div class="empty-state">Nenhum PDF não vinculado encontrado nas pastas.</div>';
+    return;
+  }
+
+  // Demo: generate fake files to scan
+  const scanList = driveAccessToken === 'DEMO' ? [
+    { id:'df1', name:'boleto_aluguel_mai2025.pdf', folder:'PILE/A Pagar', webViewLink:'https://drive.google.com/file/demo1' },
+    { id:'df2', name:'nota_materiais_construcao.pdf', folder:'PILE/A Pagar', webViewLink:'https://drive.google.com/file/demo2' },
+  ] : filesToScan;
+
+  let html = '<div class="scan-progress">';
+  scanList.forEach(f => {
+    html += `<div class="scan-item" id="scan-${f.id}">
+      <div class="scan-item-icon">📄</div>
+      <div class="scan-item-name">${f.name}</div>
+      <div class="scan-item-status"><span class="spin">⏳</span> Aguardando...</div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('scan-progress-wrap').innerHTML = html;
+
+  for (const f of scanList) {
+    const el = document.getElementById('scan-'+f.id);
+    el.querySelector('.scan-item-status').innerHTML = '<span class="spin">⏳</span> Lendo com IA...';
+
+    try {
+      const extracted = await extractPDFData(f.name, f.folder, f.webViewLink);
+      // Create lançamento
+      const item = {
+        id: genId(),
+        fornecedor: extracted.fornecedor || '',
+        tipo_doc: f.folder.includes('Comprovante') ? 'recibo' : 'boleto',
+        valor: extracted.valor || 0,
+        vencimento: extracted.vencimento || '',
+        descricao_pt: extracted.descricao || f.name.replace('.pdf','').replace(/_/g,' '),
+        descricao_en: extracted.descricao_en || '',
+        status: f.folder.includes('Pagos') || f.folder.includes('Comprovante') ? 'pago' : 'pendente',
+        data_pagamento: f.folder.includes('Pagos') ? (extracted.data_pagamento || '') : '',
+        drive_doc: f.folder.includes('Comprovante') ? '' : f.webViewLink,
+        drive_comp: f.folder.includes('Comprovante') ? f.webViewLink : '',
+        drive_file_name: f.name,
+        obs: 'Importado automaticamente do Drive',
+        criado_em: new Date().toISOString()
+      };
+      data.unshift(item);
+      save();
+      el.classList.add('done');
+      el.querySelector('.scan-item-status').innerHTML = `✅ Importado — ${fmtMoney(item.valor)}`;
+    } catch(e) {
+      el.classList.add('error');
+      el.querySelector('.scan-item-status').innerHTML = '❌ Erro: '+e.message;
+    }
+    await new Promise(r => setTimeout(r, 600));
+  }
+
+  document.getElementById('scan-btn').textContent = 'Concluído';
+  renderTable();
+  toast(`✅ ${scanList.length} arquivo(s) importados!`);
+}
+
+// ═══════════════════════════════════════════════════
+// AI PDF EXTRACTION
+// ═══════════════════════════════════════════════════
+async function extractPDFData(filename, folder, driveUrl) {
+  // Demo mode: generate realistic data from filename
+  if (driveAccessToken === 'DEMO') {
+    await new Promise(r => setTimeout(r, 800 + Math.random()*400));
+    const demos = {
+      'aluguel': { fornecedor:'Imobiliária Central', valor:3500, vencimento: getNextFriday(), descricao:'Aluguel do galpão industrial', descricao_en:'Industrial warehouse rent' },
+      'nota': { fornecedor:'Materiais & Cia', valor:1240.50, vencimento: getNextFriday(), descricao:'Nota fiscal materiais de construção', descricao_en:'Construction materials invoice' },
+      'energia': { fornecedor:'CEMIG', valor:892.30, vencimento: getNextFriday(), descricao:'Conta de energia elétrica', descricao_en:'Electric energy bill' },
+    };
+    const key = Object.keys(demos).find(k => filename.toLowerCase().includes(k)) || 'nota';
+    return demos[key];
+  }
+
+  // Real: call Anthropic API
+  const prompt = `Você é um assistente financeiro. Analise o nome do arquivo e a pasta do Google Drive e extraia os dados financeiros.
+
+Nome do arquivo: ${filename}
+Pasta: ${folder}
+URL: ${driveUrl}
+
+Extraia e retorne APENAS JSON com:
+{
+  "fornecedor": "nome da empresa/pessoa",
+  "valor": 0.00,
+  "vencimento": "YYYY-MM-DD",
+  "data_pagamento": "YYYY-MM-DD ou null",
+  "descricao": "descrição em português",
+  "descricao_en": "description in English"
+}
+
+Se não conseguir extrair algum campo, deixe null ou 0. Responda APENAS com o JSON.`;
+
+  const res = await fetch(ANTHROPIC_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 400,
+      messages: [{ role:'user', content: prompt }]
+    })
+  });
+  const d = await res.json();
+  const text = d.content?.[0]?.text || '{}';
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+// ═══════════════════════════════════════════════════
+// FILE UPLOAD + AI READ
+// ═══════════════════════════════════════════════════
+async function handleFileUpload(file) {
+  if (!file) return;
+  document.getElementById('upload-zone').style.borderColor = 'var(--accent-mid)';
+  document.getElementById('upload-zone').querySelector('.upload-zone-title').textContent = '⏳ Lendo com IA...';
+
+  try {
+    const base64 = await fileToBase64(file);
+    const extracted = await extractFromBase64(base64, file.type, file.name);
+    showAIResult(extracted);
+    fillFormFromExtracted(extracted);
+    toast('✨ Dados extraídos pela IA!');
+  } catch(e) {
+    toast('Não foi possível ler o arquivo automaticamente.');
+  }
+  document.getElementById('upload-zone').querySelector('.upload-zone-title').textContent = '✅ '+file.name;
+}
+
+function fileToBase64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function extractFromBase64(base64, mimeType, filename) {
+  if (driveAccessToken === 'DEMO' || !driveAccessToken) {
+    // Demo: parse from filename
+    await new Promise(r => setTimeout(r, 1000));
+    return await extractPDFData(filename, 'PILE/A Pagar', '');
+  }
+
+  const isPDF = mimeType === 'application/pdf';
+  const content = isPDF
+    ? [{ type:'document', source:{ type:'base64', media_type:'application/pdf', data:base64 } },
+       { type:'text', text:'Extraia do boleto/documento: fornecedor, valor, vencimento, descrição. Responda APENAS em JSON: {"fornecedor":"","valor":0,"vencimento":"YYYY-MM-DD","descricao":"","descricao_en":""}' }]
+    : [{ type:'image', source:{ type:'base64', media_type:mimeType, data:base64 } },
+       { type:'text', text:'Extraia do boleto/documento: fornecedor, valor, vencimento, descrição. Responda APENAS em JSON: {"fornecedor":"","valor":0,"vencimento":"YYYY-MM-DD","descricao":"","descricao_en":""}' }];
+
+  const res = await fetch(ANTHROPIC_API, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:500, messages:[{role:'user',content}] })
+  });
+  const d = await res.json();
+  const text = d.content?.[0]?.text || '{}';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+function showAIResult(ex) {
+  const box = document.getElementById('ai-result');
+  box.style.display = 'block';
+  document.getElementById('ai-result-grid').innerHTML = `
+    <div class="ai-field"><span>Fornecedor</span>${ex.fornecedor||'—'}</div>
+    <div class="ai-field"><span>Valor</span>${fmtMoney(ex.valor)}</div>
+    <div class="ai-field"><span>Vencimento</span>${fmtDate(ex.vencimento)}</div>
+    <div class="ai-field"><span>Descrição EN</span>${ex.descricao_en||'—'}</div>
+  `;
+}
+
+function fillFormFromExtracted(ex) {
+  if (ex.fornecedor) document.getElementById('f-fornecedor').value = ex.fornecedor;
+  if (ex.valor) document.getElementById('f-valor').value = ex.valor;
+  if (ex.vencimento) document.getElementById('f-vencimento').value = ex.vencimento;
+  if (ex.descricao) document.getElementById('f-descricao-pt').value = ex.descricao;
+  if (ex.descricao_en) document.getElementById('f-descricao-en').value = ex.descricao_en;
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════
+function openModal(prefill) {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Novo Lançamento';
+  ['f-fornecedor','f-valor','f-vencimento','f-descricao-pt','f-descricao-en','f-data-pagamento','f-obs','f-drive-doc','f-drive-comp'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-tipo-doc').value = 'boleto';
+  document.getElementById('f-status').value = 'pendente';
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('upload-zone').querySelector('.upload-zone-title').textContent = 'Arraste o boleto ou clique para selecionar';
+  document.getElementById('drive-doc-name').textContent = '';
+  document.getElementById('drive-comp-name').textContent = '';
+  if (prefill) fillFormFromExtracted(prefill);
+  togglePagFields();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function togglePagFields() {
+  const s = document.getElementById('f-status').value;
+  document.getElementById('f-data-pag-group').style.opacity = s==='pago' ? '1' : '0.5';
+}
+
+function editItem(id) {
+  const item = data.find(d=>d.id===id); if(!item) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = 'Editar Lançamento';
+  document.getElementById('f-fornecedor').value = item.fornecedor||'';
+  document.getElementById('f-tipo-doc').value = item.tipo_doc||'boleto';
+  document.getElementById('f-valor').value = item.valor||'';
+  document.getElementById('f-vencimento').value = item.vencimento||'';
+  document.getElementById('f-descricao-pt').value = item.descricao_pt||'';
+  document.getElementById('f-descricao-en').value = item.descricao_en||'';
+  document.getElementById('f-status').value = item.status||'pendente';
+  document.getElementById('f-data-pagamento').value = item.data_pagamento||'';
+  document.getElementById('f-obs').value = item.obs||'';
+  document.getElementById('f-drive-doc').value = item.drive_doc||'';
+  document.getElementById('f-drive-comp').value = item.drive_comp||'';
+  document.getElementById('ai-result').style.display = 'none';
+  togglePagFields();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function salvar() {
+  const item = {
+    id: editId||genId(),
+    fornecedor: document.getElementById('f-fornecedor').value.trim(),
+    tipo_doc: document.getElementById('f-tipo-doc').value,
+    valor: parseFloat(document.getElementById('f-valor').value)||0,
+    vencimento: document.getElementById('f-vencimento').value,
+    descricao_pt: document.getElementById('f-descricao-pt').value.trim(),
+    descricao_en: document.getElementById('f-descricao-en').value.trim(),
+    status: document.getElementById('f-status').value,
+    data_pagamento: document.getElementById('f-data-pagamento').value,
+    obs: document.getElementById('f-obs').value.trim(),
+    drive_doc: document.getElementById('f-drive-doc').value.trim(),
+    drive_comp: document.getElementById('f-drive-comp').value.trim(),
+    criado_em: editId ? (data.find(d=>d.id===editId)||{}).criado_em : new Date().toISOString()
+  };
+  if (!item.fornecedor) { alert('Preencha o fornecedor.'); return; }
+  if (editId) { const i=data.findIndex(d=>d.id===editId); data[i]=item; }
+  else data.unshift(item);
+  save(); closeModal(); renderTable();
+  // If pago, move in Drive
+  if (item.status === 'pago' && item.drive_doc && driveConnected) moveToPagos(item);
+  toast(editId ? 'Atualizado!' : 'Lançamento salvo!');
+}
+
+async function moveToPagos(item) {
+  if (!item.data_pagamento || driveAccessToken === 'DEMO') return;
+  const mk = monthKey(item.data_pagamento);
+  const folder = `PILE/Pagos/${mk}`;
+  if (!driveFolders[folder]) {
+    // create month folder
+    toast(`Movendo para ${folder}...`);
+  }
+}
+
+function deleteItem(id) {
+  if (!confirm('Excluir este lançamento?')) return;
+  data = data.filter(d=>d.id!==id); save(); renderTable(); toast('Excluído.');
+}
+
+function markPago(id) {
+  const item = data.find(d=>d.id===id); if(!item) return;
+  item.status = 'pago';
+  if (!item.data_pagamento) item.data_pagamento = hoje.toISOString().slice(0,10);
+  save(); renderTable(); toast('Marcado como pago! ✅');
+}
+
+// ═══════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════
+function renderTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const mk = document.getElementById('mes-select').value;
+  let rows = data.filter(item => {
+    const s = calcStatus(item);
+    if (filterStatus !== 'todos' && s !== filterStatus) return false;
+    if (mk && monthKey(item.vencimento) !== mk) return false;
+    if (q) {
+      const hay = [item.fornecedor,item.descricao_en,item.descricao_pt,item.obs].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  rows.sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+
+  // Populate month select
+  const keys = [...new Set(data.map(d=>monthKey(d.vencimento)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('mes-select');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todos os meses</option>' + keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${monthLabel(k)}</option>`).join('');
+
+  const tbody = document.getElementById('boletos-tbody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhum lançamento encontrado.</td></tr>'; updateStats(); return; }
+
+  const bm = {pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm = {pago:'✓ Pago',pendente:'Pendente',vencido:'⚠ Vencido',programado:'Programado'};
+  const dm = {boleto:'📋',nota:'🧾',recibo:'📄',fatura:'📑',contrato:'📝',outro:'📌'};
+
+  tbody.innerHTML = rows.map(item => {
+    const s = calcStatus(item);
+    const docs = [];
+    if (item.drive_doc) docs.push(`<a class="file-chip drive" href="${item.drive_doc}" target="_blank">📄 Doc</a>`);
+    if (item.drive_comp) docs.push(`<a class="file-chip drive" href="${item.drive_comp}" target="_blank">🧾 Comp</a>`);
+    if (!docs.length) docs.push('<span style="color:var(--text3);font-size:12px">—</span>');
+    return `<tr>
+      <td class="mono" style="font-size:12px">${fmtDate(item.vencimento)}</td>
+      <td style="font-weight:500">${item.fornecedor||'—'}</td>
+      <td style="color:var(--text2);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${item.descricao_en||''}">${item.descricao_en||item.descricao_pt||'—'}</td>
+      <td><span class="badge badge-neutral">${dm[item.tipo_doc]||''} ${item.tipo_doc||'—'}</span></td>
+      <td class="mono text-right">${fmtMoney(item.valor)}</td>
+      <td><span class="badge ${bm[s]||'badge-pendente'}">${lm[s]||s}</span></td>
+      <td><div style="display:flex;gap:4px;flex-wrap:wrap">${docs.join('')}</div></td>
+      <td><div class="actions-col">
+        <button class="icon-btn" onclick="editItem('${item.id}')" title="Editar">✏️</button>
+        <button class="icon-btn" onclick="markPago('${item.id}')" title="Marcar pago" style="${s==='pago'?'opacity:.3;cursor:default':''}">✓</button>
+        <button class="icon-btn danger" onclick="deleteItem('${item.id}')" title="Excluir">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  updateStats();
+}
+
+function updateStats() {
+  const now = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}`;
+  const mes = data.filter(d=>monthKey(d.vencimento)===now||monthKey(d.data_pagamento)===now);
+  document.getElementById('stat-total').textContent = fmtMoney(mes.reduce((s,d)=>s+Number(d.valor||0),0));
+  document.getElementById('stat-mes-label').textContent = meses[hoje.getMonth()]+' '+hoje.getFullYear();
+  const p=data.filter(d=>calcStatus(d)==='pendente').length;
+  const v=data.filter(d=>calcStatus(d)==='vencido').length;
+  document.getElementById('stat-pendentes').textContent = p;
+  document.getElementById('stat-vencidos').textContent = v;
+  document.getElementById('stat-pagos').textContent = data.filter(d=>calcStatus(d)==='pago'&&(monthKey(d.data_pagamento)===now||monthKey(d.vencimento)===now)).length;
+  document.getElementById('badge-urgente').textContent = p+v;
+  document.getElementById('badge-urgente').className = 'nav-badge'+(p+v===0?' ok':'');
+}
+
+function setFilter(s,btn) {
+  filterStatus=s;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTable();
+}
+
+// ═══════════════════════════════════════════════════
+// FECHAMENTO
+// ═══════════════════════════════════════════════════
+function renderFechamento() {
+  const keys = [...new Set(data.map(d=>monthKey(d.vencimento)).filter(Boolean))].sort().reverse();
+  const sel = document.getElementById('select-mes-fech');
+  const cur = sel.value;
+  sel.innerHTML = keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${monthLabel(k)}</option>`).join('');
+  if (!sel.value && keys.length) sel.value = keys[0];
+  const mk = sel.value;
+  document.getElementById('fech-title').textContent = 'Lançamentos — '+(mk?monthLabel(mk):'');
+  const rows = data.filter(d=>monthKey(d.vencimento)===mk).sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+  const total = rows.reduce((s,d)=>s+Number(d.valor||0),0);
+  const bm={pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm={pago:'Pago',pendente:'Pendente',vencido:'Vencido',programado:'Programado'};
+
+  document.getElementById('fech-tbody').innerHTML = rows.length
+    ? rows.map(item => {
+        const s=calcStatus(item);
+        const docs=[];
+        if(item.drive_doc) docs.push(`<a class="file-chip drive" href="${item.drive_doc}" target="_blank">📄</a>`);
+        if(item.drive_comp) docs.push(`<a class="file-chip drive" href="${item.drive_comp}" target="_blank">🧾</a>`);
+        return `<tr>
+          <td class="mono" style="font-size:12px">${fmtDate(item.data_pagamento||item.vencimento)}</td>
+          <td>${item.fornecedor||'—'}</td>
+          <td style="color:var(--text2)">${item.descricao_en||item.descricao_pt||'—'}</td>
+          <td><span class="badge badge-neutral">${item.tipo_doc||'—'}</span></td>
+          <td class="mono text-right">${Number(item.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+          <td>${docs.join('')||'<span style="color:var(--text3)">—</span>'}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="6" class="empty-state">Nenhum lançamento neste mês.</td></tr>';
+
+  document.getElementById('fech-total').textContent = fmtMoney(total);
+
+  const semComp = rows.filter(d=>d.status==='pago'&&(!d.drive_comp)).length;
+  const semDoc = rows.filter(d=>!d.drive_doc).length;
+  const semEn = rows.filter(d=>!d.descricao_en).length;
+  const pendentes = rows.filter(d=>calcStatus(d)!=='pago').length;
+  const checks = [
+    {ok:rows.length>0, text:`${rows.length} lançamento(s) no mês`},
+    {ok:pendentes===0, warn:pendentes>0, text: pendentes===0?'Todos os boletos pagos':`${pendentes} boleto(s) ainda não pago(s)`},
+    {ok:semComp===0, warn:semComp>0, text: semComp===0?'Todos os comprovantes vinculados no Drive':`${semComp} pagamento(s) sem comprovante`},
+    {ok:semDoc===0, warn:semDoc>0, text: semDoc===0?'Todos os documentos vinculados':`${semDoc} lançamento(s) sem documento`},
+    {ok:semEn===0, warn:semEn>0, text: semEn===0?'Todas as descrições em inglês preenchidas':`${semEn} lançamento(s) sem descrição em inglês`},
+  ];
+  document.getElementById('checklist-wrap').innerHTML = checks.map(c=>`
+    <div class="check-item">
+      <div class="check-dot ${c.ok?'ok':c.warn?'warn':'fail'}">${c.ok?'✓':'!'}</div>
+      <div class="check-text ${c.ok?'':'fail'}">${c.text}</div>
+    </div>`).join('');
+
+  const allOk = checks.every(c=>c.ok);
+  document.getElementById('closing-icon-wrap').style.background = allOk?'var(--success-light)':'var(--warn-light)';
+  document.getElementById('closing-icon-wrap').textContent = allOk?'✅':'⏰';
+  document.getElementById('closing-title').textContent = allOk?'Tudo pronto para envio!':`Pendências em ${mk?monthLabel(mk):''}`;
+  document.getElementById('closing-sub').textContent = allOk?`Fechamento de ${monthLabel(mk)} completo`:'Resolva os itens do checklist antes de enviar ao dono.';
+}
+
+// ═══════════════════════════════════════════════════
+// RELATÓRIO
+// ═══════════════════════════════════════════════════
+function renderRelatorio() {
+  const byMonth = {};
+  data.forEach(item => {
+    const k=monthKey(item.vencimento)||'sem-data';
+    if(!byMonth[k]) byMonth[k]=[];
+    byMonth[k].push(item);
+  });
+  const keys = Object.keys(byMonth).sort().reverse();
+  if (!keys.length) { document.getElementById('relatorio-content').innerHTML='<div class="empty-state">Nenhum dado.</div>'; return; }
+  const bm={pago:'badge-pago',pendente:'badge-pendente',vencido:'badge-vencido',programado:'badge-programado'};
+  const lm={pago:'Pago',pendente:'Pendente',vencido:'Vencido',programado:'Programado'};
+  document.getElementById('relatorio-content').innerHTML = keys.map(k=>{
+    const items=byMonth[k];
+    const total=items.reduce((s,d)=>s+Number(d.valor||0),0);
+    const pagos=items.filter(d=>calcStatus(d)==='pago').length;
+    return `<div class="report-section" style="margin-bottom:16px">
+      <div class="report-header">
+        <h3>${k==='sem-data'?'Sem data':monthLabel(k)}</h3>
+        <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text2)">
+          <span>${pagos}/${items.length} pagos</span>
+          <strong class="mono" style="font-size:14px;color:var(--text)">${fmtMoney(total)}</strong>
+        </div>
+      </div>
+      <table style="width:100%">
+        <thead><tr><th>Vencimento</th><th>Fornecedor</th><th>Descrição (EN)</th><th>Tipo</th><th class="text-right">Valor</th><th>Status</th><th>Drive</th></tr></thead>
+        <tbody>${items.map(item=>{
+          const s=calcStatus(item);
+          const docs=[];
+          if(item.drive_doc) docs.push('<a class="file-chip drive" href="'+item.drive_doc+'" target="_blank">📄 Doc</a>');
+          if(item.drive_comp) docs.push('<a class="file-chip drive" href="'+item.drive_comp+'" target="_blank">🧾 Comp</a>');
+          return `<tr>
+            <td class="mono" style="font-size:12px">${fmtDate(item.vencimento)}</td>
+            <td>${item.fornecedor||'—'}</td>
+            <td style="color:var(--text2)">${item.descricao_en||item.descricao_pt||'—'}</td>
+            <td><span class="badge badge-neutral">${item.tipo_doc||'—'}</span></td>
+            <td class="mono text-right">${fmtMoney(item.valor)}</td>
+            <td><span class="badge ${bm[s]||''}">${lm[s]||s}</span></td>
+            <td>${docs.join('')||'<span style="color:var(--text3)">—</span>'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// EXPORT CSV
+// ═══════════════════════════════════════════════════
+function exportCSV() {
+  const h=['Vencimento','Fornecedor','Descricao PT','Descricao EN','Tipo','Valor','Status','Data Pagamento','Drive Doc','Drive Comp','Obs'];
+  const rows=data.map(d=>[d.vencimento,d.fornecedor,d.descricao_pt,d.descricao_en,d.tipo_doc,d.valor,calcStatus(d),d.data_pagamento,d.drive_doc,d.drive_comp,d.obs]
+    .map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`PILE_BPO_${hoje.toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('CSV exportado!');
+}
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function getNextFriday() {
+  const d=new Date();
+  d.setDate(d.getDate()+(5-d.getDay()+7)%7||7);
+  return d.toISOString().slice(0,10);
+}
+function toast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+checkDriveToken();
+const savedFolders=localStorage.getItem('pile_drive_folders');
+if(savedFolders) driveFolders=JSON.parse(savedFolders);
+renderTable();
+document.getElementById('drive-not-connected').style.display='block';
+document.getElementById('drive-connected-content').style.display='none';
+if(driveConnected) setDriveConnected(true);
+</script>
+</body>
+</html>
