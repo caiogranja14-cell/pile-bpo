@@ -560,7 +560,7 @@ let driveFolders = {}; // { name: folderId }
 let driveFiles = [];
 
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
-const GOOGLE_CLIENT_ID = 87604701971-2nf7osrigaba2366rkpp0f1fc61r09ep.apps.googleusercontent.com; // User will replace
+const GOOGLE_CLIENT_ID = '87604701971-2nf7osrigaba2366rkpp0f1fc61r09ep.apps.googleusercontent.com'; // User will replace
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
 const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
@@ -601,7 +601,7 @@ function showView(name, el) {
 // ═══════════════════════════════════════════════════
 function handleDriveAuth() {
   // Show setup instructions if no client ID
-  if (GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID') {
     showSetupInstructions();
     return;
   }
@@ -658,7 +658,7 @@ function disconnectDrive() {
 }
 
 function showSetupInstructions() {
-  const msg = `Para conectar o Google Drive:\n\n1. Acesse console.cloud.google.com\n2. Crie um projeto e ative a "Google Drive API"\n3. Em "Credenciais", crie um OAuth 2.0 Client ID (tipo: Web)\n4. Adicione a URL deste arquivo como "Authorized JavaScript origins" e "Authorized redirect URIs"\n5. Copie o Client ID e substitua 'YOUR_GOOGLE_CLIENT_ID' no código\n\nDeseja continuar em modo DEMO (sem Drive real)?`;
+  const msg = `Para conectar o Google Drive:\n\n1. Acesse console.cloud.google.com\n2. Crie um projeto e ative a "Google Drive API"\n3. Em "Credenciais", crie um OAuth 2.0 Client ID (tipo: Web)\n4. Adicione a URL deste arquivo como "Authorized JavaScript origins" e "Authorized redirect URIs"\n5. Copie o Client ID e substitua '87604701971-2nf7osrigaba2366rkpp0f1fc61r09ep.apps.googleusercontent.com' no código\n\nDeseja continuar em modo DEMO (sem Drive real)?`;
   if (confirm(msg)) {
     enableDemoMode();
   }
